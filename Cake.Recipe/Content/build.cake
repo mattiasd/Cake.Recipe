@@ -142,23 +142,8 @@ BuildParameters.Tasks.BuildTask = Task("Build")
     .Does(() => RequireTool(MSBuildExtensionPackTool, () => {
         Information("Building {0}", BuildParameters.SolutionFilePath);
 
-        var msbuildSettings = new MSBuildSettings()
-                .SetPlatformTarget(ToolSettings.BuildPlatformTarget)
-                .UseToolVersion(ToolSettings.BuildMSBuildToolVersion)
-                .WithProperty("TreatWarningsAsErrors","true")
-                .WithTarget("Build")
-                .SetMaxCpuCount(ToolSettings.MaxCpuCount)
-                .SetConfiguration(BuildParameters.Configuration)
-                .WithLogger(
-                    Context.Tools.Resolve("MSBuild.ExtensionPack.Loggers.dll").FullPath,
-                    "XmlFileLogger",
-                    string.Format(
-                        "logfile=\"{0}\";invalidCharReplacement=_;verbosity=Detailed;encoding=UTF-8",
-                        BuildParameters.Paths.Files.BuildLogFilePath)
-                );
-
         // TODO: Need to have an XBuild step here as well
-        MSBuild(BuildParameters.SolutionFilePath, msbuildSettings);;
+        MSBuild(BuildParameters.SolutionFilePath, ToolSettings.CakeRecipeMSBuildSettings);;
 
         if(BuildParameters.ShouldExecuteGitLink)
         {
@@ -175,15 +160,7 @@ BuildParameters.Tasks.DotNetCoreBuildTask = Task("DotNetCore-Build")
     .Does(() => {
         Information("Building {0}", BuildParameters.SolutionFilePath);
 
-        DotNetCoreBuild(BuildParameters.SolutionFilePath.FullPath, new DotNetCoreBuildSettings
-        {
-            Configuration = BuildParameters.Configuration,
-            ArgumentCustomization = args => args
-                .Append("/p:Version={0}", BuildParameters.Version.SemVersion)
-                .Append("/p:AssemblyVersion={0}", BuildParameters.Version.Version)
-                .Append("/p:FileVersion={0}", BuildParameters.Version.Version)
-                .Append("/p:AssemblyInformationalVersion={0}", BuildParameters.Version.InformationalVersion)
-        });
+        DotNetCoreBuild(BuildParameters.SolutionFilePath.FullPath, ToolSettings.CakeRecipeDotNetCoreBuildSettings);
 
         if(BuildParameters.ShouldExecuteGitLink)
         {
